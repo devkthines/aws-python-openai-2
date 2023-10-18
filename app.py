@@ -1,36 +1,32 @@
-import os
-
+﻿from flask import Flask, render_template, request
 import openai
-
-from flask import Flask, redirect, render_template, request, url_for
+import asyncio
 
 app = Flask(__name__)
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Set your OpenAI API key here
+openai.api_key = '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'
 
-@app.route("/", methods=("GET", "POST"))
-def index():
-    if request.method == "POST":
-        animal = request.form["animal"]
-        response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=generate_prompt(animal),
-            temperature=0.6,
-        )
-        return redirect(url_for("index", result=response.choices[0].text))
-
-    result = request.args.get("result")
-    return render_template("index.html", result=result)
-
-
-def generate_prompt(animal):
-    return """Suggest three names for an animal that is a superhero.
-
-Animal: Cat
-Names: Captain Sharpclaw, Agent Fluffball, The Incredible Feline
-Animal: Dog
-Names: Ruff the Protector, Wonder Canine, Sir Barks-a-Lot
-Animal: {}
-Names:""".format(
-        animal.capitalize()
+async def ask_openai_gpt(question):
+    response = await asyncio.to_thread(
+        openai.Completion.create,
+        engine="davinci-002",
+        prompt=question,
+        max_tokens=150,
+        n=1,
+        stop=None
     )
+    return response.choices[0].text.strip()
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/ask', methods=['POST'])
+async def ask():
+    user_input = request.form['user_input']
+    response_text = await ask_openai_gpt(user_input)
+    return response_text
+
+if __name__ == '__main__':
+    app.run(debug=True)
