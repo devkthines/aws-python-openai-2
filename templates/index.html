@@ -1,32 +1,41 @@
-﻿<!doctype html>
+﻿<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Chatbot</title>
-  </head>
-  <body>
-    <h1>Chatbot</h1>
-    <div id="chat-container"></div>
-    <input type="text" id="user-input" placeholder="Type your message...">
-    <button onclick="sendMessage()">Send</button>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI Chat</title>
+</head>
+<body>
+    <div id="chat">
+        <div id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 
     <script>
-      async function sendMessage() {
-          var userInput = document.getElementById("user-input").value;
-          document.getElementById("chat-container").innerHTML += `<p>You: ${userInput}</p>`;
+        async function sendMessage() {
+            const userMessage = document.getElementById("user-input").value;
+            if (!userMessage) return;
 
-          var formData = new FormData();
-          formData.append("user_input", userInput);
+            const chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<div>User: ${userMessage}</div>`;
 
-          var response = await fetch('/ask', {
-              method: 'POST',
-              body: formData
-          });
+            const response = await fetch('/get_response', {
+                method: 'POST',
+                body: `user_message=${userMessage}`,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
 
-          var responseData = await response.text();
-          document.getElementById("chat-container").innerHTML += `<p>Chatbot: ${responseData}</p>`;
-          document.getElementById("user-input").value = "";
-      }
-  </script>
-  </body>
+            const responseData = await response.json();
+            const botResponse = responseData.response;
+
+            chatBox.innerHTML += `<div>Bot: ${botResponse}</div>`;
+
+            // Clear input field after sending message
+            document.getElementById("user-input").value = '';
+        }
+    </script>
+</body>
 </html>
