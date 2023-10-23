@@ -1,4 +1,5 @@
 ﻿from flask import Flask, render_template, request, jsonify
+import gradio as gr
 import os
 import openai
 import asyncio
@@ -16,7 +17,7 @@ else:
 # Now you can use openai_api_key in your OpenAI API calls
 def get_openai_response(messages):
     response =  openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="ft:gpt-3.5-turbo-0613:personal::8CLO75St",
         messages=messages,
         temperature=0.7,
         max_tokens=150
@@ -27,19 +28,29 @@ def run_asyncio_loop(loop, messages):
     asyncio.set_event_loop(loop)
     loop.run_until_complete(get_openai_response(messages))
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# @app.route('/')
+# def index():
+#     return render_template('index.html')
 
-@app.route('/get_response', methods=['POST'])
-def get_response():
-    user_message = request.form['user_message']
+# @app.route('/get_response', methods=['POST'])
+# def get_response():
+#     user_message = request.form['user_message']
+#     messages = [
+#         {"role": "system", "content": "You joke around a lot."},
+#         {"role": "user", "content": user_message}
+#     ]
+#     response =  get_openai_response(messages)
+#     return jsonify({"response": response})
+# Gradio interface
+def chatbot_interface(user_message):
     messages = [
         {"role": "system", "content": "You joke around a lot."},
         {"role": "user", "content": user_message}
     ]
-    response =  get_openai_response(messages)
-    return jsonify({"response": response})
+    response = get_openai_response(messages)
+    return response
+
+gr.Interface(fn=chatbot_interface, inputs=gr.Textbox(), outputs="text").launch()
 
 if __name__ == '__main__':
     app.run(debug=True)
